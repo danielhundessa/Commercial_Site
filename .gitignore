@@ -1,0 +1,14 @@
+# IDE - IntelliJ IDEA
+.idea/
+
+# Build directories
+target/
+*.class
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
