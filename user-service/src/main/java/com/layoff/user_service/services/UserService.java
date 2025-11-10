@@ -2,11 +2,14 @@ package com.layoff.user_service.services;
 
 import com.layoff.user_service.dtos.AddressDTO;
 import com.layoff.user_service.dtos.UserRequest;
+import com.layoff.user_service.dtos.UserResponse;
 import com.layoff.user_service.models.Address;
 import com.layoff.user_service.models.User;
 import com.layoff.user_service.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -50,5 +53,29 @@ public class UserService {
         address.setZipCode(addressDTO.getZipCode());
         address.setCountry(addressDTO.getCountry());
         return address;
+    }
+
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream().map(this::convertToUserResponse).toList();
+    }
+
+    private UserResponse convertToUserResponse(User user) {
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId(user.getId());
+        userResponse.setFirstName(user.getFirstName());
+        userResponse.setLastName(user.getLastName());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setPhone(user.getPhone());
+        if (user.getAddress() != null) {
+            AddressDTO addressDTO = new AddressDTO();
+            addressDTO.setStreet(user.getAddress().getStreet());
+            addressDTO.setCity(user.getAddress().getCity());
+            addressDTO.setState(user.getAddress().getState());
+            addressDTO.setZipCode(user.getAddress().getZipCode());
+            addressDTO.setCountry(user.getAddress().getCountry());
+            userResponse.setAddress(addressDTO);
+        }
+        return userResponse;
     }
 }
