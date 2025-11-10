@@ -78,4 +78,35 @@ public class UserService {
         }
         return userResponse;
     }
+
+    public UserResponse getUserById(String id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        return convertToUserResponse(user);
+    }
+
+    public UserResponse updateUser(String id, UserRequest userRequest) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        updateUserFromRequest(user, userRequest);
+
+        // Update or create address
+        if (userRequest.getAddress() != null) {
+            Address address = user.getAddress();
+            if (address == null) {
+                address = createAddressFromDTO(userRequest.getAddress(), user);
+            } else {
+                address.setStreet(userRequest.getAddress().getStreet());
+                address.setCity(userRequest.getAddress().getCity());
+                address.setState(userRequest.getAddress().getState());
+                address.setZipCode(userRequest.getAddress().getZipCode());
+                address.setCountry(userRequest.getAddress().getCountry());
+            }
+            user.setAddress(address);
+        }
+
+        userRepository.save(user);
+        return convertToUserResponse(user);
+    }
 }
