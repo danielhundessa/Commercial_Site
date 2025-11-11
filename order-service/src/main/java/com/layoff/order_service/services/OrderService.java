@@ -1,6 +1,7 @@
 package com.layoff.order_service.services;
 
 import com.layoff.order_service.dtos.OrderItemDTO;
+import com.layoff.order_service.dtos.OrderCreatedEvent;
 import com.layoff.order_service.dtos.OrderResponse;
 import com.layoff.order_service.models.CartItem;
 import com.layoff.order_service.models.Order;
@@ -55,6 +56,17 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
         cartService.clearCart(userId);
+
+        // Produce OrderCreated event
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                savedOrder.getId(),
+                savedOrder.getUserId(),
+                savedOrder.getStatus(),
+                mapOrderItemsToDTOs(savedOrder.getItems()),
+                savedOrder.getTotalAmount(),
+                savedOrder.getCreatedAt()
+        );
+        streamBridge.send("orderCreated-out-0", event);
 
         return Optional.of(mapToOrderResponse(savedOrder));
     }
