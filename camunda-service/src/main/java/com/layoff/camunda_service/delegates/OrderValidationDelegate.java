@@ -13,17 +13,44 @@ public class OrderValidationDelegate implements JavaDelegate {
     
     @Override
     public void execute(DelegateExecution execution) throws Exception {
-        Long orderId = (Long) execution.getVariable("orderId");
-        String userId = (String) execution.getVariable("userId");
+        logger.info("=== ORDER VALIDATION DELEGATE EXECUTION STARTED ===");
+        logger.info("ProcessInstanceId: {}, ExecutionId: {}, ActivityInstanceId: {}", 
+                execution.getProcessInstanceId(), 
+                execution.getId(),
+                execution.getActivityInstanceId());
         
-        logger.info("Validating order: {} for user: {}", orderId, userId);
-        
-        // Perform order validation logic here
-        // For now, we'll just log and set validation result
-        boolean isValid = true;
-        
-        execution.setVariable("orderValidated", isValid);
-        logger.info("Order {} validation completed. Valid: {}", orderId, isValid);
+        try {
+            Long orderId = (Long) execution.getVariable("orderId");
+            String userId = (String) execution.getVariable("userId");
+            Object totalAmount = execution.getVariable("totalAmount");
+            
+            logger.info("Retrieved process variables - OrderId: {}, UserId: {}, TotalAmount: {}", 
+                    orderId, userId, totalAmount);
+            
+            if (orderId == null) {
+                logger.error("CRITICAL: orderId is NULL in process variables!");
+            }
+            if (userId == null) {
+                logger.error("CRITICAL: userId is NULL in process variables!");
+            }
+            
+            logger.info("Starting validation for OrderId: {}, UserId: {}", orderId, userId);
+            
+            // Perform order validation logic here
+            // For now, we'll just log and set validation result
+            boolean isValid = true;
+            
+            execution.setVariable("orderValidated", isValid);
+            logger.info("Order {} validation completed successfully. Valid: {}", orderId, isValid);
+            logger.info("Process will continue to next step (UserTask_ReviewOrder)");
+            logger.info("=== ORDER VALIDATION DELEGATE EXECUTION COMPLETED ===");
+        } catch (Exception e) {
+            logger.error("ERROR: Exception in OrderValidationDelegate for ProcessInstanceId: {}", 
+                    execution.getProcessInstanceId(), e);
+            logger.error("Exception type: {}, Message: {}", e.getClass().getName(), e.getMessage());
+            throw e; // Re-throw to let Camunda handle the error
+        }
     }
 }
+
 

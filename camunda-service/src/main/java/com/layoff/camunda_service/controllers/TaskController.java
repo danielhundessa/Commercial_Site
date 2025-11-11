@@ -4,6 +4,8 @@ import com.layoff.camunda_service.dtos.TaskDTO;
 import lombok.RequiredArgsConstructor;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.task.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TaskController {
     
+    private static final Logger logger = LoggerFactory.getLogger(TaskController.class);
+    
     private final TaskService taskService;
     
     @GetMapping
@@ -25,26 +29,40 @@ public class TaskController {
             @RequestParam(required = false) String assignee,
             @RequestParam(required = false) String candidateGroup) {
         
+        logger.info("=== TASK QUERY REQUEST ===");
+        logger.info("Query parameters - assignee: {}, candidateGroup: {}", assignee, candidateGroup);
+        
         List<Task> tasks;
         
         if (assignee != null) {
+            logger.info("Querying tasks by assignee: {}", assignee);
             tasks = taskService.createTaskQuery()
                     .taskAssignee(assignee)
                     .list();
         } else if (candidateGroup != null) {
+            logger.info("Querying tasks by candidateGroup: {}", candidateGroup);
             tasks = taskService.createTaskQuery()
                     .taskCandidateGroup(candidateGroup)
                     .list();
         } else {
+            logger.info("Querying all active tasks");
             tasks = taskService.createTaskQuery()
                     .active()
                     .list();
+        }
+        
+        logger.info("Found {} task(s)", tasks.size());
+        for (Task task : tasks) {
+            logger.info("Task - Id: {}, Name: {}, Assignee: {}, ProcessInstanceId: {}, TaskDefinitionKey: {}", 
+                    task.getId(), task.getName(), task.getAssignee(), 
+                    task.getProcessInstanceId(), task.getTaskDefinitionKey());
         }
         
         List<TaskDTO> taskDTOs = tasks.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
         
+        logger.info("=== TASK QUERY COMPLETED ===");
         return ResponseEntity.ok(taskDTOs);
     }
     
@@ -120,4 +138,5 @@ public class TaskController {
         );
     }
 }
+
 
