@@ -62,7 +62,6 @@ public class OrderService {
                 savedOrder.getTotalAmount(),
                 savedOrder.getCreatedAt()
         );
-        streamBridge.send("createdOrder-out-0", event);
         return Optional.of(mapToOrderResponse(savedOrder));
     }
 
