@@ -1,0 +1,46 @@
+.task-detail {
+  width: 100%;
+}
+
+.task-info {
+  margin-bottom: 2rem;
+}
+
+.info-row {
+  display: flex;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #2c3e50;
+  min-width: 200px;
+}
+
+.info-value {
+  color: #555;
+}
+
+.task-form {
+  margin-bottom: 2rem;
+}
+
+.form-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.error-container {
+  max-width: 600px;
+  margin: 2rem auto;
+}
+

@@ -1,19 +1,224 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
-             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
-             xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
-             targetNamespace="http://camunda.org/examples">
-  <process id="order_process" name="Order Process" isExecutable="true" camunda:historyTimeToLive="P30D">
-    <startEvent id="start" name="Order Received"/>
-    <sequenceFlow id="flow1" sourceRef="start" targetRef="userTaskReview"/>
-    <userTask id="userTaskReview" name="Review Order" camunda:candidateGroups="order-managers"/>
-    <sequenceFlow id="flow2" sourceRef="userTaskReview" targetRef="end"/>
-    <endEvent id="end" name="Completed"/>
-  </process>
-</definitions>
-
-
-
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_OrderProcess"
+                  targetNamespace="http://camunda.org/examples"
+                  exporter="Camunda Modeler"
+                  exporterVersion="5.0.0">
+  <bpmn:process id="order_process" name="Order Processing Workflow" isExecutable="true" camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="StartEvent_OrderReceived" name="Order Received">
+      <bpmn:outgoing>Flow_ToValidate</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <!-- Order Validation Service Task -->
+    <bpmn:serviceTask id="ServiceTask_ValidateOrder" name="Validate Order" camunda:delegateExpression="${orderValidationDelegate}">
+      <bpmn:incoming>Flow_ToValidate</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToReview</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <!-- Order Review User Task -->
+    <bpmn:userTask id="UserTask_ReviewOrder" name="Review Order" camunda:candidateGroups="order-managers" camunda:formKey="order-review-form">
+      <bpmn:incoming>Flow_ToReview</bpmn:incoming>
+      <bpmn:outgoing>Flow_ReviewDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <!-- Exclusive Gateway for Review Decision -->
+    <bpmn:exclusiveGateway id="Gateway_ReviewDecision" name="Review Decision">
+      <bpmn:incoming>Flow_ReviewDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <!-- Payment Approval User Task -->
+    <bpmn:userTask id="UserTask_PaymentApproval" name="Approve Payment" camunda:candidateGroups="finance-team" camunda:formKey="payment-approval-form">
+      <bpmn:incoming>Flow_Approved</bpmn:incoming>
+      <bpmn:outgoing>Flow_PaymentDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <!-- Payment Decision Gateway -->
+    <bpmn:exclusiveGateway id="Gateway_PaymentDecision" name="Payment Decision">
+      <bpmn:incoming>Flow_PaymentDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_PaymentApproved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_PaymentRejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <!-- Process Payment Service Task -->
+    <bpmn:serviceTask id="ServiceTask_ProcessPayment" name="Process Payment" camunda:delegateExpression="${paymentProcessingDelegate}">
+      <bpmn:incoming>Flow_PaymentApproved</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToShipping</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <!-- Shipping Preparation User Task -->
+    <bpmn:userTask id="UserTask_PrepareShipping" name="Prepare Shipping" camunda:candidateGroups="warehouse-team" camunda:formKey="shipping-prep-form">
+      <bpmn:incoming>Flow_ToShipping</bpmn:incoming>
+      <bpmn:outgoing>Flow_ShippingReady</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <!-- Shipping Service Task -->
+    <bpmn:serviceTask id="ServiceTask_ShipOrder" name="Ship Order" camunda:delegateExpression="${shippingDelegate}">
+      <bpmn:incoming>Flow_ShippingReady</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToDelivery</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <!-- Delivery Confirmation User Task -->
+    <bpmn:userTask id="UserTask_ConfirmDelivery" name="Confirm Delivery" camunda:candidateGroups="delivery-team" camunda:formKey="delivery-confirm-form">
+      <bpmn:incoming>Flow_ToDelivery</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToComplete</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <!-- End Events -->
+    <bpmn:endEvent id="EndEvent_OrderCompleted" name="Order Completed">
+      <bpmn:incoming>Flow_ToComplete</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:endEvent id="EndEvent_OrderRejected" name="Order Rejected">
+      <bpmn:incoming>Flow_Rejected</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:endEvent id="EndEvent_PaymentRejected" name="Payment Rejected">
+      <bpmn:incoming>Flow_PaymentRejected</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_ToValidate" sourceRef="StartEvent_OrderReceived" targetRef="ServiceTask_ValidateOrder"/>
+    <bpmn:sequenceFlow id="Flow_ToReview" sourceRef="ServiceTask_ValidateOrder" targetRef="UserTask_ReviewOrder"/>
+    <bpmn:sequenceFlow id="Flow_ReviewDecision" sourceRef="UserTask_ReviewOrder" targetRef="Gateway_ReviewDecision"/>
+    <bpmn:sequenceFlow id="Flow_Approved" name="Approved" sourceRef="Gateway_ReviewDecision" targetRef="UserTask_PaymentApproval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Rejected" name="Rejected" sourceRef="Gateway_ReviewDecision" targetRef="EndEvent_OrderRejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewApproved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_PaymentDecision" sourceRef="UserTask_PaymentApproval" targetRef="Gateway_PaymentDecision"/>
+    <bpmn:sequenceFlow id="Flow_PaymentApproved" name="Payment Approved" sourceRef="Gateway_PaymentDecision" targetRef="ServiceTask_ProcessPayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${paymentApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_PaymentRejected" name="Payment Rejected" sourceRef="Gateway_PaymentDecision" targetRef="EndEvent_PaymentRejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${paymentApproved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ToShipping" sourceRef="ServiceTask_ProcessPayment" targetRef="UserTask_PrepareShipping"/>
+    <bpmn:sequenceFlow id="Flow_ShippingReady" sourceRef="UserTask_PrepareShipping" targetRef="ServiceTask_ShipOrder"/>
+    <bpmn:sequenceFlow id="Flow_ToDelivery" sourceRef="ServiceTask_ShipOrder" targetRef="UserTask_ConfirmDelivery"/>
+    <bpmn:sequenceFlow id="Flow_ToComplete" sourceRef="UserTask_ConfirmDelivery" targetRef="EndEvent_OrderCompleted"/>
+  </bpmn:process>
+  
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="order_process">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_OrderReceived">
+        <dc:Bounds x="179" y="99" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="162" y="142" width="70" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ValidateOrder_di" bpmnElement="ServiceTask_ValidateOrder">
+        <dc:Bounds x="270" y="77" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_ReviewOrder_di" bpmnElement="UserTask_ReviewOrder">
+        <dc:Bounds x="430" y="77" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ReviewDecision_di" bpmnElement="Gateway_ReviewDecision" isMarkerVisible="true">
+        <dc:Bounds x="592" y="92" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_PaymentApproval_di" bpmnElement="UserTask_PaymentApproval">
+        <dc:Bounds x="720" y="77" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PaymentDecision_di" bpmnElement="Gateway_PaymentDecision" isMarkerVisible="true">
+        <dc:Bounds x="882" y="92" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ProcessPayment_di" bpmnElement="ServiceTask_ProcessPayment">
+        <dc:Bounds x="1010" y="77" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_PrepareShipping_di" bpmnElement="UserTask_PrepareShipping">
+        <dc:Bounds x="1170" y="77" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_ShipOrder_di" bpmnElement="ServiceTask_ShipOrder">
+        <dc:Bounds x="1330" y="77" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_ConfirmDelivery_di" bpmnElement="UserTask_ConfirmDelivery">
+        <dc:Bounds x="1490" y="77" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_OrderCompleted_di" bpmnElement="EndEvent_OrderCompleted">
+        <dc:Bounds x="1650" y="99" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1633" y="142" width="70" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_OrderRejected_di" bpmnElement="EndEvent_OrderRejected">
+        <dc:Bounds x="592" y="240" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="575" y="283" width="70" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_PaymentRejected_di" bpmnElement="EndEvent_PaymentRejected">
+        <dc:Bounds x="882" y="240" width="36" height="36"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="865" y="283" width="70" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_ToValidate_di" bpmnElement="Flow_ToValidate">
+        <di:waypoint x="215" y="117"/>
+        <di:waypoint x="270" y="117"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToReview_di" bpmnElement="Flow_ToReview">
+        <di:waypoint x="370" y="117"/>
+        <di:waypoint x="430" y="117"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ReviewDecision_di" bpmnElement="Flow_ReviewDecision">
+        <di:waypoint x="530" y="117"/>
+        <di:waypoint x="592" y="117"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Approved_di" bpmnElement="Flow_Approved">
+        <di:waypoint x="642" y="117"/>
+        <di:waypoint x="720" y="117"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="676" y="99" width="50" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Rejected_di" bpmnElement="Flow_Rejected">
+        <di:waypoint x="617" y="142"/>
+        <di:waypoint x="617" y="240"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="625" y="191" width="50" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentDecision_di" bpmnElement="Flow_PaymentDecision">
+        <di:waypoint x="820" y="117"/>
+        <di:waypoint x="882" y="117"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentApproved_di" bpmnElement="Flow_PaymentApproved">
+        <di:waypoint x="932" y="117"/>
+        <di:waypoint x="1010" y="117"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="966" y="99" width="50" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentRejected_di" bpmnElement="Flow_PaymentRejected">
+        <di:waypoint x="907" y="142"/>
+        <di:waypoint x="907" y="240"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="915" y="191" width="50" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToShipping_di" bpmnElement="Flow_ToShipping">
+        <di:waypoint x="1110" y="117"/>
+        <di:waypoint x="1170" y="117"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ShippingReady_di" bpmnElement="Flow_ShippingReady">
+        <di:waypoint x="1270" y="117"/>
+        <di:waypoint x="1330" y="117"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToDelivery_di" bpmnElement="Flow_ToDelivery">
+        <di:waypoint x="1430" y="117"/>
+        <di:waypoint x="1490" y="117"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToComplete_di" bpmnElement="Flow_ToComplete">
+        <di:waypoint x="1590" y="117"/>
+        <di:waypoint x="1650" y="117"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
