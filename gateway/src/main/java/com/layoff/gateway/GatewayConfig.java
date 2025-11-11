@@ -32,9 +32,10 @@ public class GatewayConfig {
                                         .setRetries(10)
                                         .setMethods(HttpMethod.GET)
                                 )
-                                .requestRateLimiter(config -> config
-                                        .setRateLimiter(redisRateLimiter())
-                                        .setKeyResolver(hostNameKeyResolver()))
+                                // Rate limiter disabled - uncomment when Redis is configured
+                                // .requestRateLimiter(config -> config
+                                //         .setRateLimiter(redisRateLimiter())
+                                //         .setKeyResolver(hostNameKeyResolver()))
                                 .circuitBreaker(config -> config
                                         .setName("ecomBreaker")
                                         .setFallbackUri("forward:/fallback/products")))

@@ -1,6 +1,5 @@
 package com.layoff.order_service.controllers;
 
-import com.layoff.order_service.dtos.OrderResponse;
 import com.layoff.order_service.services.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,7 +14,7 @@ public class OrderController {
     private final OrderService orderService;
     
     @PostMapping
-    public ResponseEntity<OrderResponse> createOrder(
+    public ResponseEntity<?> createOrder(
             @RequestHeader("X-User-ID") String userId
     ) {
         return orderService.createOrder(userId)

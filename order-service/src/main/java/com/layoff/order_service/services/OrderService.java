@@ -1,6 +1,5 @@
 package com.layoff.order_service.services;
 
-import com.layoff.order_service.dtos.OrderCreatedEvent;
 import com.layoff.order_service.dtos.OrderItemDTO;
 import com.layoff.order_service.dtos.OrderResponse;
 import com.layoff.order_service.models.CartItem;
@@ -11,6 +10,7 @@ import com.layoff.order_service.repositories.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,6 +23,8 @@ public class OrderService {
     private final CartService cartService;
     private final OrderRepository orderRepository;
     private final StreamBridge streamBridge;
+    
+    @Transactional
     public Optional<OrderResponse> createOrder(String userId) {
 
         List<CartItem> cartItems = cartService.getCart(userId);
@@ -54,14 +56,6 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
         cartService.clearCart(userId);
 
-        OrderCreatedEvent event = new OrderCreatedEvent(
-                savedOrder.getId(),
-                savedOrder.getUserId(),
-                savedOrder.getStatus(),
-                mapOrderItemsToDTOs(savedOrder.getItems()),
-                savedOrder.getTotalAmount(),
-                savedOrder.getCreatedAt()
-        );
         return Optional.of(mapToOrderResponse(savedOrder));
     }
 
