@@ -21,7 +21,7 @@
     </bpmn:serviceTask>
     
     <!-- Order Review User Task -->
-    <bpmn:userTask id="UserTask_ReviewOrder" name="Review Order" camunda:candidateGroups="order-managers" camunda:formKey="order-review-form">
+    <bpmn:userTask id="UserTask_ReviewOrder" name="Review Order" camunda:candidateGroups="order_managers" camunda:formKey="order-review-form">
       <bpmn:incoming>Flow_ToReview</bpmn:incoming>
       <bpmn:outgoing>Flow_ReviewDecision</bpmn:outgoing>
     </bpmn:userTask>
@@ -34,7 +34,7 @@
     </bpmn:exclusiveGateway>
     
     <!-- Payment Approval User Task -->
-    <bpmn:userTask id="UserTask_PaymentApproval" name="Approve Payment" camunda:candidateGroups="finance-team" camunda:formKey="payment-approval-form">
+    <bpmn:userTask id="UserTask_PaymentApproval" name="Approve Payment" camunda:candidateGroups="finance_team" camunda:formKey="payment-approval-form">
       <bpmn:incoming>Flow_Approved</bpmn:incoming>
       <bpmn:outgoing>Flow_PaymentDecision</bpmn:outgoing>
     </bpmn:userTask>
@@ -53,7 +53,7 @@
     </bpmn:serviceTask>
     
     <!-- Shipping Preparation User Task -->
-    <bpmn:userTask id="UserTask_PrepareShipping" name="Prepare Shipping" camunda:candidateGroups="warehouse-team" camunda:formKey="shipping-prep-form">
+    <bpmn:userTask id="UserTask_PrepareShipping" name="Prepare Shipping" camunda:candidateGroups="warehouse_team" camunda:formKey="shipping-prep-form">
       <bpmn:incoming>Flow_ToShipping</bpmn:incoming>
       <bpmn:outgoing>Flow_ShippingReady</bpmn:outgoing>
     </bpmn:userTask>
@@ -65,7 +65,7 @@
     </bpmn:serviceTask>
     
     <!-- Delivery Confirmation User Task -->
-    <bpmn:userTask id="UserTask_ConfirmDelivery" name="Confirm Delivery" camunda:candidateGroups="delivery-team" camunda:formKey="delivery-confirm-form">
+    <bpmn:userTask id="UserTask_ConfirmDelivery" name="Confirm Delivery" camunda:candidateGroups="delivery_team" camunda:formKey="delivery-confirm-form">
       <bpmn:incoming>Flow_ToDelivery</bpmn:incoming>
       <bpmn:outgoing>Flow_ToComplete</bpmn:outgoing>
     </bpmn:userTask>

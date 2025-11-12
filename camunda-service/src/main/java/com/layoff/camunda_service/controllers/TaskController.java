@@ -27,14 +27,22 @@ public class TaskController {
     @GetMapping
     public ResponseEntity<List<TaskDTO>> getTasks(
             @RequestParam(required = false) String assignee,
-            @RequestParam(required = false) String candidateGroup) {
+            @RequestParam(required = false) String candidateGroup,
+            @RequestParam(required = false) String processInstanceId) {
         
         logger.info("=== TASK QUERY REQUEST ===");
-        logger.info("Query parameters - assignee: {}, candidateGroup: {}", assignee, candidateGroup);
+        logger.info("Query parameters - assignee: {}, candidateGroup: {}, processInstanceId: {}", 
+                assignee, candidateGroup, processInstanceId);
         
         List<Task> tasks;
         
-        if (assignee != null) {
+        if (processInstanceId != null) {
+            logger.info("Querying tasks by processInstanceId: {}", processInstanceId);
+            tasks = taskService.createTaskQuery()
+                    .processInstanceId(processInstanceId)
+                    .active()
+                    .list();
+        } else if (assignee != null) {
             logger.info("Querying tasks by assignee: {}", assignee);
             tasks = taskService.createTaskQuery()
                     .taskAssignee(assignee)

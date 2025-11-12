@@ -21,19 +21,36 @@ export interface TaskDTO {
   due: string | null;
 }
 
+export interface ProcessActivity {
+  activityId: string;
+  activityName: string;
+  activityType: string;
+  startTime?: string;
+  endTime?: string;
+  duration?: number;
+}
+
+export interface ProcessStatus {
+  completedActivities: ProcessActivity[];
+  activeActivities: ProcessActivity[];
+  isEnded: boolean;
+}
+
 export interface ProcessInstance {
   id: string;
   processDefinitionId: string;
   businessKey: string | null;
   variables: Record<string, any>;
+  status?: ProcessStatus;
 }
 
 export const camundaApi = {
   // Task operations
-  getTasks: async (assignee?: string, candidateGroup?: string): Promise<TaskDTO[]> => {
+  getTasks: async (assignee?: string, candidateGroup?: string, processInstanceId?: string): Promise<TaskDTO[]> => {
     const params: any = {};
     if (assignee) params.assignee = assignee;
     if (candidateGroup) params.candidateGroup = candidateGroup;
+    if (processInstanceId) params.processInstanceId = processInstanceId;
     
     const response = await api.get<TaskDTO[]>('/tasks', { params });
     return response.data;
@@ -81,7 +98,32 @@ export const camundaApi = {
     const response = await api.get<Record<string, any>>(`/process-instances/${processInstanceId}/variables`);
     return response.data;
   },
+
+  getProcessStatus: async (processInstanceId: string): Promise<ProcessStatus> => {
+    const response = await api.get<ProcessStatus>(`/process-instances/${processInstanceId}/status`);
+    return response.data;
+  },
+
+  // Identity operations
+  getAllUsers: async (): Promise<UserDTO[]> => {
+    const response = await api.get<UserDTO[]>('/identity/users');
+    return response.data;
+  },
+
+  getUsersByGroup: async (groupId: string): Promise<UserDTO[]> => {
+    const response = await api.get<UserDTO[]>(`/identity/groups/${groupId}/users`);
+    return response.data;
+  },
 };
+
+export interface UserDTO {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  groups: string[];
+}
+
 
 
 

@@ -20,7 +20,7 @@ public class OrderValidationDelegate implements JavaDelegate {
                 execution.getActivityInstanceId());
         
         try {
-            Long orderId = (Long) execution.getVariable("orderId");
+            Long orderId = getOrderIdAsLong(execution);
             String userId = (String) execution.getVariable("userId");
             Object totalAmount = execution.getVariable("totalAmount");
             
@@ -49,6 +49,26 @@ public class OrderValidationDelegate implements JavaDelegate {
                     execution.getProcessInstanceId(), e);
             logger.error("Exception type: {}, Message: {}", e.getClass().getName(), e.getMessage());
             throw e; // Re-throw to let Camunda handle the error
+        }
+    }
+    
+    /**
+     * Safely extracts orderId as Long from process variables.
+     * Handles both Integer and Long types that Camunda might store.
+     */
+    private Long getOrderIdAsLong(DelegateExecution execution) {
+        Object orderIdObj = execution.getVariable("orderId");
+        if (orderIdObj == null) {
+            throw new IllegalStateException("orderId variable is null");
+        }
+        if (orderIdObj instanceof Long) {
+            return (Long) orderIdObj;
+        } else if (orderIdObj instanceof Integer) {
+            return ((Integer) orderIdObj).longValue();
+        } else if (orderIdObj instanceof Number) {
+            return ((Number) orderIdObj).longValue();
+        } else {
+            throw new ClassCastException("orderId must be a number, but was: " + orderIdObj.getClass().getName());
         }
     }
 }

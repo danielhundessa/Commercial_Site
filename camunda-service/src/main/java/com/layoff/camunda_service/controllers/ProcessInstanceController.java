@@ -1,7 +1,10 @@
 package com.layoff.camunda_service.controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.history.HistoricActivityInstance;
+import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +24,7 @@ public class ProcessInstanceController {
     private static final Logger logger = LoggerFactory.getLogger(ProcessInstanceController.class);
     
     private final RuntimeService runtimeService;
+    private final HistoryService historyService;
     
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getProcessInstances(
@@ -81,7 +85,83 @@ public class ProcessInstanceController {
         result.put("businessKey", instance.getBusinessKey());
         result.put("variables", runtimeService.getVariables(processInstanceId));
         
+        // Get process status (completed and active activities)
+        Map<String, Object> status = getProcessStatusInternal(processInstanceId);
+        result.put("status", status);
+        
         return ResponseEntity.ok(result);
+    }
+    
+    /**
+     * Get process status showing completed and active activities
+     */
+    @GetMapping("/{processInstanceId}/status")
+    public ResponseEntity<Map<String, Object>> getProcessStatus(@PathVariable String processInstanceId) {
+        Map<String, Object> status = getProcessStatusInternal(processInstanceId);
+        return ResponseEntity.ok(status);
+    }
+    
+    private Map<String, Object> getProcessStatusInternal(String processInstanceId) {
+        Map<String, Object> status = new HashMap<>();
+        
+        // Get completed activities from history
+        List<HistoricActivityInstance> completedActivities = historyService
+                .createHistoricActivityInstanceQuery()
+                .processInstanceId(processInstanceId)
+                .finished()
+                .orderByHistoricActivityInstanceEndTime()
+                .asc()
+                .list();
+        
+        List<Map<String, Object>> completed = completedActivities.stream()
+                .map(activity -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("activityId", activity.getActivityId());
+                    map.put("activityName", activity.getActivityName());
+                    map.put("activityType", activity.getActivityType());
+                    map.put("startTime", activity.getStartTime());
+                    map.put("endTime", activity.getEndTime());
+                    map.put("duration", activity.getDurationInMillis());
+                    return map;
+                })
+                .collect(Collectors.toList());
+        
+        status.put("completedActivities", completed);
+        
+        // Get active activities from runtime
+        ProcessInstance instance = runtimeService.createProcessInstanceQuery()
+                .processInstanceId(processInstanceId)
+                .singleResult();
+        
+        List<Map<String, Object>> active = new java.util.ArrayList<>();
+        if (instance != null && !instance.isEnded()) {
+            ActivityInstance activityInstance = runtimeService.getActivityInstance(processInstanceId);
+            if (activityInstance != null) {
+                collectActiveActivities(activityInstance, active);
+            }
+        }
+        
+        status.put("activeActivities", active);
+        status.put("isEnded", instance == null || instance.isEnded());
+        
+        return status;
+    }
+    
+    private void collectActiveActivities(ActivityInstance activityInstance, List<Map<String, Object>> active) {
+        if (activityInstance.getActivityType() != null && 
+            !activityInstance.getActivityType().equals("subProcess")) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("activityId", activityInstance.getActivityId());
+            map.put("activityName", activityInstance.getActivityName());
+            map.put("activityType", activityInstance.getActivityType());
+            active.add(map);
+        }
+        
+        if (activityInstance.getChildActivityInstances() != null) {
+            for (ActivityInstance child : activityInstance.getChildActivityInstances()) {
+                collectActiveActivities(child, active);
+            }
+        }
     }
     
     @GetMapping("/{processInstanceId}/variables")

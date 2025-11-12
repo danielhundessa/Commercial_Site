@@ -45,14 +45,14 @@ This guide explains the complete Camunda workflow integration for the e-commerce
 **Process Flow**:
 1. **Start Event**: Order Received
 2. **Service Task**: Validate Order (automatic)
-3. **User Task**: Review Order (order-managers group)
+3. **User Task**: Review Order (order_managers group)
 4. **Gateway**: Review Decision (Approved/Rejected)
-5. **User Task**: Approve Payment (finance-team group)
+5. **User Task**: Approve Payment (finance_team group)
 6. **Gateway**: Payment Decision (Approved/Rejected)
 7. **Service Task**: Process Payment (automatic)
-8. **User Task**: Prepare Shipping (warehouse-team group)
+8. **User Task**: Prepare Shipping (warehouse_team group)
 9. **Service Task**: Ship Order (automatic)
-10. **User Task**: Confirm Delivery (delivery-team group)
+10. **User Task**: Confirm Delivery (delivery_team group)
 11. **End Event**: Order Completed
 
 ### 3. Created Java Delegates
@@ -111,7 +111,7 @@ This guide explains the complete Camunda workflow integration for the e-commerce
          │
          ▼
 ┌─────────────────┐
-│  Review Order   │ (User Task - order-managers)
+│  Review Order   │ (User Task - order_managers)
 └────────┬────────┘
          │
          ▼
@@ -127,7 +127,7 @@ This guide explains the complete Camunda workflow integration for the e-commerce
     │
     ▼
 ┌─────────────────┐
-│ Approve Payment │ (User Task - finance-team)
+│ Approve Payment │ (User Task - finance_team)
 └────────┬────────┘
          │
          ▼
@@ -148,7 +148,7 @@ This guide explains the complete Camunda workflow integration for the e-commerce
          │
          ▼
 ┌─────────────────┐
-│Prepare Shipping │ (User Task - warehouse-team)
+│Prepare Shipping │ (User Task - warehouse_team)
 └────────┬────────┘
          │
          ▼
@@ -158,7 +158,7 @@ This guide explains the complete Camunda workflow integration for the e-commerce
          │
          ▼
 ┌─────────────────┐
-│Confirm Delivery │ (User Task - delivery-team)
+│Confirm Delivery │ (User Task - delivery_team)
 └────────┬────────┘
          │
          ▼
@@ -366,7 +366,7 @@ The application will open at `http://localhost:3000`
 ### Step 5: Using the Frontend
 
 1. **View Tasks**: Navigate to the Tasks page
-2. **Filter Tasks**: Select a candidate group (order-managers, finance-team, etc.)
+2. **Filter Tasks**: Select a candidate group (order_managers, finance_team, etc.)
 3. **Claim Tasks**: Enter a user ID and click "Claim" on unassigned tasks
 4. **Complete Tasks**: Click on a task to view details and complete it
 5. **View Process Instances**: Navigate to Process Instances page
@@ -402,7 +402,7 @@ SELECT * FROM ACT_RU_TASK;
 ### Test 3: Complete Tasks via Frontend
 
 1. Open React app at `http://localhost:3000`
-2. Filter by candidate group: `order-managers`
+2. Filter by candidate group: `order_managers`
 3. Enter user ID and claim the "Review Order" task
 4. Complete the task with approval
 5. Check for next task (Payment Approval)
@@ -642,6 +642,7 @@ This integration provides:
 ✅ **Comprehensive documentation** for setup and usage
 
 The system is now ready for production use with proper error handling, logging, and monitoring capabilities.
+
 
 
 

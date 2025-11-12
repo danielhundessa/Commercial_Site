@@ -164,7 +164,7 @@ When `runtimeService.startProcessInstanceByKey()` is called, Camunda automatical
 #### 5. Tasks
 - **Table:** `ACT_RU_TASK` (Runtime Tasks)
 - When process reaches `userTaskReview`, a task is created
-- Assigned to candidate group: `order-managers`
+- Assigned to candidate group: `order_managers`
 
 ---
 
@@ -174,7 +174,7 @@ When `runtimeService.startProcessInstanceByKey()` is called, Camunda automatical
 
 **Process Flow:**
 1. **Start Event** → "Order Received"
-2. **User Task** → "Review Order" (candidate group: `order-managers`)
+2. **User Task** → "Review Order" (candidate group: `order_managers`)
 3. **End Event** → "Completed"
 
 **Process ID:** `order_process`
@@ -320,6 +320,7 @@ docker exec commercial_site-kafka-1 kafka-consumer-groups \
 ---
 
 **Last Updated:** Generated automatically based on current codebase structure
+
 
 
 

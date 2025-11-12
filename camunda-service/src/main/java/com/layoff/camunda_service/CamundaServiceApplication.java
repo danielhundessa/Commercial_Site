@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-record OrderItemDTO(Long id, String productId, Integer quantity) {}
+record OrderItemDTO(Long id, String productId, Integer quantity, java.math.BigDecimal price, java.math.BigDecimal subtotal) {}
 record OrderCreatedEvent(Long orderId, String userId, String status, java.util.List<OrderItemDTO> items, java.math.BigDecimal totalAmount, java.time.LocalDateTime createdAt) {}
 
 @SpringBootApplication

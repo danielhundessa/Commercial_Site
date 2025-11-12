@@ -13,7 +13,7 @@ public class ShippingDelegate implements JavaDelegate {
     
     @Override
     public void execute(DelegateExecution execution) throws Exception {
-        Long orderId = (Long) execution.getVariable("orderId");
+        Long orderId = getOrderIdAsLong(execution);
         
         logger.info("Shipping order: {}", orderId);
         
@@ -24,7 +24,28 @@ public class ShippingDelegate implements JavaDelegate {
         
         logger.info("Order {} shipped successfully. Tracking Number: {}", orderId, trackingNumber);
     }
+    
+    /**
+     * Safely extracts orderId as Long from process variables.
+     * Handles both Integer and Long types that Camunda might store.
+     */
+    private Long getOrderIdAsLong(DelegateExecution execution) {
+        Object orderIdObj = execution.getVariable("orderId");
+        if (orderIdObj == null) {
+            throw new IllegalStateException("orderId variable is null");
+        }
+        if (orderIdObj instanceof Long) {
+            return (Long) orderIdObj;
+        } else if (orderIdObj instanceof Integer) {
+            return ((Integer) orderIdObj).longValue();
+        } else if (orderIdObj instanceof Number) {
+            return ((Number) orderIdObj).longValue();
+        } else {
+            throw new ClassCastException("orderId must be a number, but was: " + orderIdObj.getClass().getName());
+        }
+    }
 }
+
 
 
 
