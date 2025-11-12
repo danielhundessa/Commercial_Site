@@ -313,3 +313,4 @@ docker exec commercial_site-kafka-1 kafka-consumer-groups --bootstrap-server loc
 
 
 
+

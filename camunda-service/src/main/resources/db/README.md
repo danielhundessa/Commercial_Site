@@ -89,3 +89,4 @@ ORDER BY m.GROUP_ID_;
 - The scripts use `INSERT IGNORE` for memberships to prevent duplicate key errors
 - Passwords are hashed using MySQL's `MD5()` function (Camunda's default)
 
+
