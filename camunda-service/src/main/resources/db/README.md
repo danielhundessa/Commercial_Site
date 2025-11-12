@@ -90,3 +90,4 @@ ORDER BY m.GROUP_ID_;
 - Passwords are hashed using MySQL's `MD5()` function (Camunda's default)
 
 
+
